@@ -1,0 +1,64 @@
+version: '3.5'
+
+services:
+  tutorial_app:
+    container_name: tutorial_app
+    restart: always
+    build:
+      context: ./
+    command: sh -c "python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "7777:8000"
+    volumes:
+      - ./:/app
+    links:
+      - tutorial_postgres
+    environment:
+      POSTGRES_PASSWORD: '1q2w3e4r5t'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_URL: tutorial_postgres
+      POSTGRES_DB: 'workflow_db'
+    networks:
+      - tutorial_nw_postgres
+    depends_on:
+      - tutorial_postgres
+
+  tutorial_postgres:
+    container_name: tutorial_db
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_DB: 'workflow_db'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: '1q2w3e4r5t'
+      PGDATA: /data/postgres
+    volumes:
+      - tutorial_vol_postgres:/data/postgres
+    ports:
+      - "7778:5432"
+    networks:
+      - tutorial_nw_postgres
+    restart: unless-stopped
+
+  tutorial_pgadmin:
+    container_name: tutorial_db_admin
+    image: dpage/pgadmin4:6.8
+    environment:
+      PGADMIN_DEFAULT_EMAIL: 'pedro.gonzalezn@device.cl'
+      PGADMIN_DEFAULT_PASSWORD: '123456'
+    volumes:
+      - tutorial_vol_pgadmin:/root/.pgadmin
+    ports:
+      - "7779:80"
+    networks:
+      - tutorial_nw_postgres
+    restart: unless-stopped
+    logging:
+      driver: none
+
+networks:
+    tutorial_nw_postgres:
+      driver: bridge
+
+volumes:
+    tutorial_vol_postgres:
+    tutorial_vol_pgadmin:
